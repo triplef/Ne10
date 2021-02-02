@@ -83,29 +83,21 @@ else()
 endif()
 
 #NDK_SYSROOT_PATH is used in compiler's '--sysroot' flags
-set(NDK_SYSROOT_PATH "$ENV{ANDROID_NDK}/platforms/android-${ANDROID_API_LEVEL}/arch-${ANDROID_NDK_PLATFORMS_ARCH_SUFFIX}/")
-set(NDK_ISYSROOT_PATH "$ENV{ANDROID_NDK}/sysroot -I$ENV{ANDROID_NDK}/sysroot/usr/include/${ANDROID_NDK_TOOLCHAIN_CROSS_PREFIX}")
-
 if(APPLE)
-    #TODO: Check whether this path is correct for aarch64 under mac.
     set(ANDROID_TOOLCHAIN_PATH "$ENV{ANDROID_NDK}/toolchains/llvm/prebuilt/darwin-x86_64/bin")
+    set(NDK_SYSROOT_PATH "$ENV{ANDROID_NDK}/toolchains/llvm/prebuilt/darwin-x86_64/sysroot")
 else()
     set(ANDROID_TOOLCHAIN_PATH "$ENV{ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin")
+    set(NDK_SYSROOT_PATH "$ENV{ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot")
 endif()
 
 #change toolchain name according to your configuration
 set(CMAKE_C_COMPILER ${ANDROID_TOOLCHAIN_PATH}/${ANDROID_NDK_TOOLCHAIN_CROSS_PREFIX}${ANDROID_API_LEVEL}-clang)
 set(CMAKE_CXX_COMPILER ${ANDROID_TOOLCHAIN_PATH}/${ANDROID_NDK_TOOLCHAIN_CROSS_PREFIX}${ANDROID_API_LEVEL}-clang++)
 
-if(${NE10_ANDROID_TARGET_ARCH} STREQUAL "armv7")
-	set(CMAKE_ASM_COMPILER "$ENV{ANDROID_NDK}/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/arm-linux-androideabi/bin/as")
-    find_program(CMAKE_AR NAMES "$ENV{ANDROID_NDK}/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/arm-linux-androideabi/bin/ar")
-    find_program(CMAKE_RANLIB NAMES "$ENV{ANDROID_NDK}/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/arm-linux-androideabi/bin/ranlib")
-else()
-    set(CMAKE_ASM_COMPILER ${ANDROID_TOOLCHAIN_PATH}/${ANDROID_NDK_TOOLCHAIN_CROSS_PREFIX}-as)
-    find_program(CMAKE_AR NAMES "${ANDROID_TOOLCHAIN_PATH}/${ANDROID_NDK_TOOLCHAIN_CROSS_PREFIX}-ar")
-    find_program(CMAKE_RANLIB NAMES "${ANDROID_TOOLCHAIN_PATH}/${ANDROID_NDK_TOOLCHAIN_CROSS_PREFIX}-ranlib")
-endif()
+set(CMAKE_ASM_COMPILER ${ANDROID_TOOLCHAIN_PATH}/llvm-as)
+find_program(CMAKE_AR NAMES "${ANDROID_TOOLCHAIN_PATH}/llvm-ar")
+find_program(CMAKE_RANLIB NAMES "${ANDROID_TOOLCHAIN_PATH}/llvm-ranlib")
 
 # Skip the platform compiler checks for cross compiling
 set(CMAKE_C_COMPILER_WORKS 1)
@@ -121,8 +113,7 @@ else()
 endif()
 
 #TODO: Fine tune pic and pie flag for executable, share library and static library.
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --sysroot=${NDK_SYSROOT_PATH} -pie")
-string(APPEND CMAKE_C_FLAGS " -isysroot ${NDK_ISYSROOT_PATH}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --sysroot=${NDK_SYSROOT_PATH} -fPIC")
 # set(CMAKE_ASM_FLAGS "")
 add_definitions(-D__ANDROID_API__=${ANDROID_API_LEVEL})
 
